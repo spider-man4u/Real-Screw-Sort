@@ -56,7 +56,12 @@ jobs:
       - name: Remove generated widget test (kept from template)
         run: rm -f test/widget_test.dart
       - name: Patch signing config
-        run: python3 tools/patch_build_gradle.py android/app/build.gradle
+        run: |
+          if [ -f android/app/build.gradle.kts ]; then
+            python3 tools/patch_build_gradle.py android/app/build.gradle.kts
+          elif [ -f android/app/build.gradle ]; then
+            python3 tools/patch_build_gradle.py android/app/build.gradle
+          fi
       - name: Write keystore from secret
         if: env.KEYSTORE_B64 != ''
         env:
