@@ -12,20 +12,20 @@ void main() {
   test('debug: locate first NaN', () {
     final out = StringBuffer();
     void probe(String label, PhysicsWorld world, SoftBody plate,
-        List<(String, Vec2)> pins) {
+        List<(String, Vec2)> pins, int frames) {
       for (final (name, anchor) in pins) {
         world.pin(plate, anchor);
       }
-      for (var frame = 0; frame < 30; frame++) {
+      for (var frame = 0; frame < frames; frame++) {
         world.step(1 / 60);
         for (var i = 0; i < plate.particles.length; i++) {
           final p = plate.particles[i];
           if (p.pos.x.isNaN ||
               p.pos.y.isNaN ||
-              p.prev.x.isNaN ||
-              p.prev.y.isNaN) {
+              p.vel.x.isNaN ||
+              p.vel.y.isNaN) {
             out.writeln('[$label] NaN at frame $frame particle $i: '
-                'pos=${p.pos} prev=${p.prev} rest=${p.rest} '
+                'pos=${p.pos} vel=${p.vel} rest=${p.rest} '
                 'pins=${p.pins} mass=${p.mass}');
             out.writeln('[$label] all: '
                 '${plate.particles.map((q) => q.pos.toString()).join(' ')}');
@@ -35,8 +35,8 @@ void main() {
           }
         }
       }
-      out.writeln('[$label] no NaN in first 30 frames; '
-          'sag=${world.sag(plate)} tilt=${world.tiltAngle(plate)}');
+      out.writeln('[$label] OK: $frames frames, sag=${world.sag(plate)} '
+          'tilt=${world.tiltAngle(plate)} center=${plate.center}');
     }
 
     // scenario A: sag test (3 pins, single body)
@@ -47,17 +47,26 @@ void main() {
         ('bottomL', const Vec2(1.5, 2.5)),
         ('bottomR', const Vec2(3.5, 2.5)),
         ('top', const Vec2(2.5, 1.5)),
-      ]);
+      ], 240);
     }
 
-    // scenario B: stacking test (two bodies, support collisions)
+    // scenario B: free-fall (no pins, 3x2 plate)
+    {
+      final world = PhysicsWorld(cols: 8, rows: 8);
+      final plate = world.addBody(x: 1, y: 1, w: 3, h: 2);
+      probe('free-fall', world, plate, [], 240);
+    }
+
+    // scenario C: stacking test (two bodies, support collisions)
     {
       final world = PhysicsWorld(cols: 8, rows: 8);
       final bottom = world.addBody(x: 1, y: 5, w: 3, h: 1);
       probe('stack-bottom', world, bottom, [
         ('screwL', const Vec2(1.5, 5.5)),
         ('screwR', const Vec2(3.5, 5.5)),
-      ]);
+      ], 240);
+      final top = world.addBody(x: 1, y: 1, w: 3, h: 1);
+      probe('stack-top', world, top, [], 1500);
     }
 
     Directory('build').createSync(recursive: true);

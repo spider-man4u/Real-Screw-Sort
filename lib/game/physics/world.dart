@@ -101,7 +101,7 @@ class PhysicsWorld {
     final g = Vec2(0, gravity);
     for (final body in bodies) {
       for (final p in body.particles) {
-        p.integrate(g * body.gravityScale, damping, _substep * _substep);
+        p.integrate(g * body.gravityScale, damping, _substep);
       }
     }
 
@@ -121,23 +121,21 @@ class PhysicsWorld {
       for (final p in body.particles) {
         // ground (board bottom lip)
         if (p.pos.y > groundY) {
-          if (p.prev.y <= groundY && (p.pos.y - p.prev.y) > 0) {
-            final speed = (p.pos.y - p.prev.y) / _substep;
-            if (speed > impactThreshold * max(1.0, body.gravityScale)) {
-              onImpact?.call(body, speed);
-            }
+          if (p.prev.y <= groundY &&
+              p.vel.y > impactThreshold * max(1.0, body.gravityScale)) {
+            onImpact?.call(body, p.vel.y);
           }
           p.pos = Vec2(p.pos.x, groundY);
-          p.prev = Vec2(p.prev.x, groundY);
+          p.vel = Vec2(p.vel.x, 0);
         }
         // side walls
         if (p.pos.x < 0) {
           p.pos = Vec2(0, p.pos.y);
-          p.prev = Vec2(0, p.prev.y);
+          p.vel = Vec2(0, p.vel.y);
         }
         if (p.pos.x > cols) {
           p.pos = Vec2(cols.toDouble(), p.pos.y);
-          p.prev = Vec2(cols.toDouble(), p.prev.y);
+          p.vel = Vec2(0, p.vel.y);
         }
       }
     }
@@ -160,7 +158,7 @@ class PhysicsWorld {
           final yAt = a.y + (b.y - a.y) * t;
           if (p.prev.y <= yAt + 1e-9 && p.pos.y > yAt) {
             p.pos = Vec2(p.pos.x, yAt);
-            p.prev = Vec2(p.prev.x, yAt);
+            if (p.vel.y > 0) p.vel = Vec2(p.vel.x, 0);
           }
         }
       }

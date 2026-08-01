@@ -10,6 +10,7 @@ class Particle {
   Vec2 pos;
   Vec2 prev;
   final Vec2 rest;
+  Vec2 vel = Vec2.zero;
   double mass = 1.0;
 
   /// Screw anchors holding this particle (a particle can be pinned by
@@ -18,28 +19,31 @@ class Particle {
 
   bool get isPinned => pins.isNotEmpty;
 
-  /// Max position change per substep (cells/s). Caps solver blow-ups.
-  static const double maxSpeed = 2.0;
+  /// Max speed in cells per second. Caps any solver blow-up.
+  static const double maxSpeed = 480;
 
-  void integrate(Vec2 gravity, double damping, double dt2) {
+  /// Semi-implicit Euler: velocity is integrated first, then position.
+  /// Spring/constraint solves only touch [pos], so they can never pump
+  /// energy into the simulation - this is unconditionally stable.
+  void integrate(Vec2 gravity, double damping, double dt) {
     if (isPinned) {
       pos = rest;
-      prev = rest;
+      vel = Vec2.zero;
       return;
     }
-    var vel = (pos - prev) * damping;
+    vel = vel * damping + gravity * dt;
     final vLen = vel.length;
     if (vLen > maxSpeed) {
       vel = vel * (maxSpeed / vLen);
     }
     prev = pos;
-    pos = pos + vel + gravity * dt2;
+    pos = pos + vel * dt;
   }
 
   void solvePin() {
     if (isPinned) {
       pos = rest;
-      prev = rest;
+      vel = Vec2.zero;
     }
   }
 
@@ -203,6 +207,7 @@ class SoftBody {
     for (final p in particles) {
       p.pos = p.rest;
       p.prev = p.rest;
+      p.vel = Vec2.zero;
     }
     _lastPos = null;
   }
