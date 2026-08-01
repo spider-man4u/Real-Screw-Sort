@@ -12,6 +12,7 @@ import '../game/engine/models.dart';
 import '../game/engine/solver.dart';
 import '../game/physics/soft_body.dart';
 import '../game/physics/vec2.dart';
+import '../game/physics/world.dart';
 import '../game/rendering/board_painter.dart';
 import '../game/rendering/themes.dart';
 import '../services/analytics/analytics_service.dart';

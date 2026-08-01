@@ -20,7 +20,6 @@ class AppPrefs {
   static const _kSkin = 'skin_';
   static const _kDailyIndex = 'daily_index';
   static const _kDailyClaimed = 'daily_claimed';
-  static const _kDailyLast = 'daily_last_claim';
   static const _kScrewsRemoved = 'screws_removed';
   static const _kLevelsPlayed = 'levels_played';
   static const _kHintsUsed = 'hints_used';

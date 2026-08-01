@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:real_screw_sort/data/levels/handcrafted.dart';
 import 'package:real_screw_sort/data/levels/level_catalog.dart';
 import 'package:real_screw_sort/data/levels/level_generator.dart';
-import 'package:real_screw_sort/game/engine/board.dart';
 import 'package:real_screw_sort/game/engine/models.dart';
 import 'package:real_screw_sort/game/engine/solver.dart';
 

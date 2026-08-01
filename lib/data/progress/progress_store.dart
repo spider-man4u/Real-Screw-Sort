@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
-import '../core/storage/prefs.dart';
-import '../data/levels/level_catalog.dart';
+import '../../core/storage/prefs.dart';
+import '../../data/levels/level_catalog.dart';
 
 /// One entry of the daily reward calendar (PDR section 17).
 class DailyReward {
