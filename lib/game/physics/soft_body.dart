@@ -174,6 +174,11 @@ class SoftBody {
   /// and blow up.
   static const double relaxation = 0.25;
 
+  /// Max position change (cells) a single spring solve may apply. Guards
+  /// against the (d - rest) / d factor exploding when two particles nearly
+  /// coincide (squashed plate piles).
+  static const double maxCorrection = 0.5;
+
   void solveSprings() {
     for (final s in springs) {
       final pa = particles[s.a];
@@ -181,18 +186,20 @@ class SoftBody {
       if (pa.isPinned && pb.isPinned) continue;
       final diff = pb.pos - pa.pos;
       final d = diff.length;
-      if (d < 1e-12) continue;
-      final corr = ((d - s.rest) / d) * s.stiffness * relaxation;
+      if (d < 1e-9) continue;
+      final dir = diff / d;
+      var move = (d - s.rest) * s.stiffness * relaxation;
+      move = move.clamp(-maxCorrection, maxCorrection);
       if (pa.isPinned) {
-        pb.pos += diff * corr;
+        pb.pos += dir * move;
       } else if (pb.isPinned) {
-        pa.pos -= diff * corr;
+        pa.pos -= dir * move;
       } else {
         final wa = 1 / pa.mass;
         final wb = 1 / pb.mass;
         final total = wa + wb;
-        pa.pos -= diff * (corr * wa / total);
-        pb.pos += diff * (corr * wb / total);
+        pa.pos -= dir * (move * wa / total);
+        pb.pos += dir * (move * wb / total);
       }
     }
   }
