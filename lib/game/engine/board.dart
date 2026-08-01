@@ -145,6 +145,7 @@ class BoardState {
   /// Apply a removal. Returns null when illegal.
   ApplyResult? removeScrew(int screwId) {
     if (_done) return null;
+    if (!level.screws.any((s) => s.id == screwId)) return null;
     final s = screwById(screwId);
     if (!canRemoveScrew(s)) return null;
 

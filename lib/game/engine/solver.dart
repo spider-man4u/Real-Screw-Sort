@@ -87,7 +87,8 @@ class BoardSolver {
   /// Move-count lower bound ignoring slot constraints; cheap sanity check.
   int get screwCount => level.screws.length;
 
-  bool _isGoal(BoardState b) => b.isWon;
+  /// Goal test on a derived board (no move history, so use evaluateWon).
+  bool _isGoal(BoardState b) => b.evaluateWon();
 
   SimState? _apply(BoardState board, SimState state, Move move) {
     if (move.isRemove) {
