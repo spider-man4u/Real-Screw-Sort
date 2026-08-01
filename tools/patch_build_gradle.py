@@ -69,7 +69,12 @@ def patch_kotlin(path: str, content: str) -> str:
         ("java.io.FileInputStream", "import java.io.FileInputStream"),
     ):
         if imp not in content and default not in content:
-            content = re.sub(r"(?m)^(import .*;?\n)*", default + "\n", content, count=1)
+            content = re.sub(
+                r"(?m)^import ",
+                default + "\nimport ",
+                content,
+                count=1,
+            )
 
     keystore_loader = """
 val keystoreProperties = Properties()
