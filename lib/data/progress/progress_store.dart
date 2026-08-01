@@ -191,7 +191,7 @@ class ProgressStore extends ChangeNotifier {
         addUndos(reward.amount);
       case '🎨':
         // theme fragment: unlock the next locked theme
-        for (final t in catalog.themeList) {
+        for (final t in LevelCatalog.themeList) {
           if (!hasTheme(t)) {
             unlockTheme(t);
             break;
