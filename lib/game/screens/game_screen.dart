@@ -31,7 +31,7 @@ class _GameScreenState extends State<GameScreen>
   Ticker? _ticker;
   Duration _lastElapsed = Duration.zero;
   String _themeKey = 'workshop';
-  String _skinKey = 'classic';
+  final String _skinKey = 'classic';
 
   @override
   void initState() {
@@ -99,15 +99,17 @@ class _GameScreenState extends State<GameScreen>
   Future<void> _hint() async {
     if (_ctrl.phase != GamePhase.playing) return;
     final progress = context.read<ProgressStore>();
+    final analytics = context.read<AnalyticsService>();
     if (!progress.hasFreeHints) {
       final ad = context.read<AdsService>();
       final rewarded = await ad.showRewarded(RewardPlacement.hint);
-      context.read<AnalyticsService>().logRewardedAd('hint', rewarded);
-      if (!rewarded) return;
+      analytics.logRewardedAd('hint', rewarded);
+      if (!rewarded || !mounted) return;
       progress.addHints(1);
     }
+    if (!mounted) return;
     if (_ctrl.requestHint()) {
-      context.read<AnalyticsService>().logEvent('hint_used');
+      analytics.logEvent('hint_used');
     } else {
       showToast(context, 'No hint available');
     }
@@ -115,13 +117,15 @@ class _GameScreenState extends State<GameScreen>
 
   Future<void> _undo() async {
     final progress = context.read<ProgressStore>();
+    final analytics = context.read<AnalyticsService>();
     if (!progress.hasFreeUndos) {
       final ad = context.read<AdsService>();
       final rewarded = await ad.showRewarded(RewardPlacement.undo);
-      context.read<AnalyticsService>().logRewardedAd('undo', rewarded);
-      if (!rewarded) return;
+      analytics.logRewardedAd('undo', rewarded);
+      if (!rewarded || !mounted) return;
       progress.addUndos(1);
     }
+    if (!mounted) return;
     final ok = _ctrl.undo();
     if (!ok) {
       showToast(context, 'One-way screws cannot be undone!');

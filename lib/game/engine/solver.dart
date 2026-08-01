@@ -8,7 +8,7 @@ class Solution {
   Solution(this.moves, this.states);
 
   final List<Move> moves;
-  final List<_SimState> states;
+  final List<SimState> states;
 
   int get length => moves.length;
 }
@@ -16,15 +16,15 @@ class Solution {
 /// Minimal state for search: which screws are gone (bitmask), which screw is
 /// in hand. Slots-used is fully determined by (mask, hand) since slotting is
 /// the only way a color screw leaves the hand.
-class _SimState {
-  _SimState(this.mask, this.hand);
+class SimState {
+  SimState(this.mask, this.hand);
 
   final int mask;
   final int hand; // -1 = empty hand, else screw id
 
   @override
   bool operator ==(Object other) =>
-      other is _SimState && other.mask == mask && other.hand == hand;
+      other is SimState && other.mask == mask && other.hand == hand;
 
   @override
   int get hashCode => Object.hash(mask, hand);
@@ -41,14 +41,14 @@ class BoardSolver {
 
   /// Solve from the given state. Returns null when unsolvable within limits.
   Solution? solve({int fromRemovedMask = 0, int? fromHand}) {
-    final start = _SimState(fromRemovedMask, fromHand ?? -1);
+    final start = SimState(fromRemovedMask, fromHand ?? -1);
     final initial = _buildBoard(start);
     if (_isGoal(initial)) return Solution(const [], [start]);
 
-    final queue = Queue<_SimState>();
-    final visited = <_SimState>{};
-    final parent = <_SimState, _SimState>{};
-    final moveToParent = <_SimState, Move>{};
+    final queue = Queue<SimState>();
+    final visited = <SimState>{};
+    final parent = <SimState, SimState>{};
+    final moveToParent = <SimState, Move>{};
 
     queue.add(start);
     visited.add(start);
@@ -89,35 +89,35 @@ class BoardSolver {
 
   bool _isGoal(BoardState b) => b.isWon;
 
-  _SimState? _apply(BoardState board, _SimState state, Move move) {
+  SimState? _apply(BoardState board, SimState state, Move move) {
     if (move.isRemove) {
       final screw = level.screws.firstWhere((s) => s.id == move.screwId);
       if (screw.isColor) {
-        return _SimState(state.mask, screw.id);
+        return SimState(state.mask, screw.id);
       }
-      return _SimState(state.mask | (1 << screw.id), -1);
+      return SimState(state.mask | (1 << screw.id), -1);
     }
     // slot
     final h = state.hand;
     if (h < 0) return null;
-    return _SimState(state.mask | (1 << h), -1);
+    return SimState(state.mask | (1 << h), -1);
   }
 
-  BoardState _buildBoard(_SimState state) {
+  BoardState _buildBoard(SimState state) {
     final b = BoardState(level);
     b.restoreFromMask(state.mask, state.hand >= 0 ? state.hand : null);
     return b;
   }
 
   Solution? _reconstruct(
-    _SimState start,
-    _SimState goal,
-    Map<_SimState, _SimState> parent,
-    Map<_SimState, Move> moveToParent,
+    SimState start,
+    SimState goal,
+    Map<SimState, SimState> parent,
+    Map<SimState, Move> moveToParent,
   ) {
     final moves = <Move>[];
-    final states = <_SimState>[];
-    _SimState cur = goal;
+    final states = <SimState>[];
+    SimState cur = goal;
     while (cur != start) {
       moves.add(moveToParent[cur]!);
       states.add(cur);

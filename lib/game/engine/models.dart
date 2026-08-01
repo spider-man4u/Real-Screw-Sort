@@ -191,9 +191,9 @@ class LevelDef {
 /// A single player action.
 @immutable
 class Move {
-  const Move.remove(int screwId) : screwId = screwId, color = null;
+  const Move.remove(this.screwId) : color = null;
 
-  const Move.slot(int color) : screwId = null, color = color;
+  const Move.slot(this.color) : screwId = null;
 
   final int? screwId;
   final int? color;

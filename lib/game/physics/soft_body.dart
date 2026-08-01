@@ -47,8 +47,8 @@ class Particle {
   }
 }
 
-class _Spring {
-  _Spring(this.a, this.b, this.stiffness);
+class Spring {
+  Spring(this.a, this.b, this.stiffness);
 
   final int a;
   final int b;
@@ -74,7 +74,7 @@ class SoftBody {
       return Particle(Vec2(px, py));
     });
     void spring(int a, int b, double stiffness) {
-      final s = _Spring(a, b, stiffness);
+      final s = Spring(a, b, stiffness);
       s.rest = (particles[a].rest - particles[b].rest).length;
       springs.add(s);
     }
@@ -103,7 +103,7 @@ class SoftBody {
   final double gravityScale;
 
   late final List<Particle> particles;
-  final List<_Spring> springs = [];
+  final List<Spring> springs = [];
 
   /// Bodies this one must not collide with (they overlap in cells).
   final Set<int> noCollide = {};

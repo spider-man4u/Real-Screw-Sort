@@ -29,7 +29,7 @@ class _ShopScreenState extends State<ShopScreen> {
     final progress = context.read<ProgressStore>();
     final audio = context.read<AudioManager>();
     final ok = await iap.purchase(product);
-    if (ok) {
+    if (ok && mounted) {
       audio.coin();
       switch (product.id) {
         case 'remove_ads':

@@ -43,8 +43,9 @@ class _VictoryScreenState extends State<VictoryScreen>
     if (_doubled) return;
     final progress = context.read<ProgressStore>();
     final ads = context.read<AdsService>();
+    final analytics = context.read<AnalyticsService>();
     final rewarded = await ads.showRewarded(RewardPlacement.doubleCoins);
-    context.read<AnalyticsService>().logRewardedAd('double_coins', rewarded);
+    analytics.logRewardedAd('double_coins', rewarded);
     if (!rewarded || !mounted) return;
     progress.addCoins(widget.controller.lastCoins);
     setState(() => _doubled = true);
