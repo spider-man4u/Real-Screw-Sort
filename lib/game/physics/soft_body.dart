@@ -132,7 +132,7 @@ class SoftBody {
     for (final p in particles) {
       s += p.pos;
     }
-    return s / particles.length;
+    return s / particles.length.toDouble();
   }
 
   Vec2 get velocity {

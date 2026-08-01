@@ -96,12 +96,39 @@ class BoardSolver {
       if (screw.isColor) {
         return SimState(state.mask, screw.id);
       }
-      return SimState(state.mask | (1 << screw.id), -1);
+      return SimState(_cascade(state.mask | (1 << screw.id), state.hand), -1);
     }
     // slot
     final h = state.hand;
     if (h < 0) return null;
-    return SimState(state.mask | (1 << h), -1);
+    return SimState(_cascade(state.mask | (1 << h), -1), -1);
+  }
+
+  /// Apply heavy-plate smash cascades to a removal mask: a detached heavy
+  /// plate smashes the fragile plate directly below it, removing its screws
+  /// too (chained through heavy targets).
+  int _cascade(int mask, int hand) {
+    var m = mask;
+    var changed = true;
+    while (changed) {
+      changed = false;
+      final b = BoardState(level);
+      b.restoreFromMask(m, hand >= 0 ? hand : null);
+      for (final p in level.plates) {
+        if (!b.plateAttached(p.id) && p.heavy) {
+          final target = p.below(level.plates);
+          if (target == null || !target.fragile) continue;
+          if (!b.plateAttached(target.id)) continue;
+          for (final s in level.screws.where((s) => s.plateId == target.id)) {
+            if (!b.screwGone(s.id)) {
+              m |= 1 << s.id;
+              changed = true;
+            }
+          }
+        }
+      }
+    }
+    return m;
   }
 
   BoardState _buildBoard(SimState state) {
