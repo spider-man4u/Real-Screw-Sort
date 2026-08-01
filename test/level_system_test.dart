@@ -76,7 +76,7 @@ void main() {
     test('handcrafted pars match the solver', () {
       for (final lvl in handcraftedLevels) {
         final solution = BoardSolver(lvl).solve()!;
-        expect(solution.length, lessThanOrEqualTo(lvl.parMoves),
+        expect(solution.length, lessThanOrEqualTo(lvl.parMoves!),
             reason: 'level ${lvl.id} par mismatch (authored ${lvl.parMoves}, '
                 'solver ${solution.length})');
       }

@@ -158,6 +158,10 @@ class PhysicsWorld {
           if (id == body.id) continue;
           if (!_collide(body.id, id)) continue;
           if ((b.x - a.x).abs() < 1e-9) continue;
+          // only clamp particles that are horizontally over the edge
+          final minX = a.x < b.x ? a.x : b.x;
+          final maxX = a.x < b.x ? b.x : a.x;
+          if (p.pos.x < minX || p.pos.x > maxX) continue;
           final t = ((p.pos.x - a.x) / (b.x - a.x)).clamp(0.0, 1.0);
           final yAt = a.y + (b.y - a.y) * t;
           if (p.prev.y <= yAt + 1e-9 && p.pos.y > yAt) {
