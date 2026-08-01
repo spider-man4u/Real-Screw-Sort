@@ -86,8 +86,8 @@ class GameController extends ChangeNotifier {
       );
     }
     world.onImpact = _onImpact;
-    syncPins();
     board = BoardState(level);
+    syncPins();
     analytics.logLevelStart(level.id);
   }
 
