@@ -42,7 +42,10 @@ class MockAdsService implements AdsService {
       return true;
     }
     final rewarded = await navigator.push<bool>(
-      _AdOverlay(delay: rewardDelay),
+      MaterialPageRoute(
+        builder: (_) => _AdOverlay(delay: rewardDelay),
+        fullscreenDialog: true,
+      ),
     );
     _showing = false;
     return rewarded ?? false;
@@ -57,7 +60,11 @@ class MockAdsService implements AdsService {
       _showing = false;
       return;
     }
-    await navigator.push(_InterstitialOverlay(delay: const Duration(seconds: 2)));
+    await navigator.push(
+      MaterialPageRoute(
+        builder: (_) => _InterstitialOverlay(delay: const Duration(seconds: 2)),
+      ),
+    );
     _showing = false;
   }
 

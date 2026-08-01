@@ -139,7 +139,7 @@ void main() {
         hits++;
         maxSpeed = max(maxSpeed, speed);
       };
-      final plate = world.addBody(x: 1, y: 1, w: 2, h: 1);
+      world.addBody(x: 1, y: 1, w: 2, h: 1);
       run(world, 600);
       expect(hits, greaterThan(0));
       expect(maxSpeed, greaterThan(0));

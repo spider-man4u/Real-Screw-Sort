@@ -227,16 +227,10 @@ class _GameScreenState extends State<GameScreen>
   }
 
   void _next() {
-    final progress = context.read<ProgressStore>();
     final id = _ctrl.level.id;
-    if (id >= progress.unlockedLevel) {
-      progress.unlockedLevel = min(progress.unlockedLevel + 1, 200);
-    }
     _maybeInterstitial();
     Navigator.of(context).pushReplacementNamed('/game', arguments: id + 1);
   }
-
-  int min(int a, int b) => a < b ? a : b;
 
   Future<void> _maybeInterstitial() async {
     final prefs = context.read<ProgressStore>().prefs;
@@ -273,7 +267,6 @@ class _GameScreenState extends State<GameScreen>
 
   // ------------------------------------------------------------------- HUD
   Widget _hud(BuildContext context, ProgressStore progress, LevelDef level) {
-    final ctrl = _ctrl;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
       child: Row(
@@ -550,7 +543,6 @@ class _LoseOverlay extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 }

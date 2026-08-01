@@ -148,7 +148,6 @@ class BoardPainter extends CustomPainter {
     final slotCount = data.level.maxColorSlots;
     if (slotCount == 0) return;
     // slots live on the left edge, one per row (up to maxColorSlots)
-    final cols = data.level.cols;
     for (var color = 0; color < data.level.slots.length; color++) {
       final count = data.level.slotCountFor(color);
       for (var i = 0; i < count; i++) {
@@ -273,8 +272,8 @@ class BoardPainter extends CustomPainter {
       canvas.translate(center.dx, center.dy);
       canvas.rotate(pi / 4);
       canvas.drawLine(
-        const Offset(-r * 0.5, 0),
-        const Offset(r * 0.5, 0),
+        Offset(-r * 0.5, 0),
+        Offset(r * 0.5, 0),
         Paint()
           ..color = skin.slot
           ..strokeWidth = max(1.2, r * 0.14)

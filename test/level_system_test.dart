@@ -7,8 +7,6 @@ import 'package:real_screw_sort/game/engine/models.dart';
 import 'package:real_screw_sort/game/engine/solver.dart';
 
 void validateLevel(LevelDef lvl) {
-  final board = BoardState(lvl);
-
   // every screw sits inside its own plate's rect
   for (final s in lvl.screws) {
     final own = lvl.plates[s.plateId].rect;

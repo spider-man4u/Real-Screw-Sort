@@ -142,9 +142,21 @@ class LevelSelectScreen extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: unlocked
                 ? (stars > 0
-                    ? const [Palette.blue, Palette.blueDeep]
-                    : [Colors.white, const Color(0xFFE8EDFB)])
-                : const [Color(0xFFD5DAEA), Color(0xFFC3C9DD)],
+                    ? const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Palette.blue, Palette.blueDeep],
+                      )
+                    : const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Colors.white, Color(0xFFE8EDFB)],
+                      ))
+                : const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFFD5DAEA), Color(0xFFC3C9DD)],
+                  ),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(

@@ -77,7 +77,7 @@ class BoardState {
 
   bool isHidden(Screw s) {
     if (s.type != ScrewType.hidden) return false;
-    return coverPlates(s).any(plateAttached);
+    return coverPlates(s).any((p) => plateAttached(p.id));
   }
 
   bool canRemoveScrew(Screw s) {
@@ -118,7 +118,7 @@ class BoardState {
     return used < level.slotCountFor(s.color!);
   }
 
-  int get usedSlotCountFor(int color) => _slotsUsed[color] ?? 0;
+  int usedSlotCountFor(int color) => _slotsUsed[color] ?? 0;
 
   /// Remaining moves the player can still make.
   List<Move> availableMoves() {
@@ -237,7 +237,7 @@ class BoardState {
     final target = level.targetPlateId;
     final cleared = target != null
         ? plateDetached(target)
-        : level.plates.every(plateDetached);
+        : level.plates.every((p) => plateDetached(p.id));
     return cleared && handScrew == null;
   }
 

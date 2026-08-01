@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui' show Color, Offset;
 
 import 'package:flutter/foundation.dart';
 
@@ -11,8 +12,8 @@ import '../game/engine/models.dart';
 import '../game/engine/solver.dart';
 import '../game/physics/soft_body.dart';
 import '../game/physics/vec2.dart';
-import '../game/physics/world.dart';
 import '../game/rendering/board_painter.dart';
+import '../game/rendering/themes.dart';
 import '../services/analytics/analytics_service.dart';
 
 enum GamePhase { playing, won, lost }
@@ -233,7 +234,7 @@ class GameController extends ChangeNotifier {
 
   // ------------------------------------------------------------------ tools
 
-  bool canUndo => board.canUndo && phase == GamePhase.playing;
+  bool get canUndo => board.canUndo && phase == GamePhase.playing;
 
   bool undo() {
     if (!canUndo) return false;

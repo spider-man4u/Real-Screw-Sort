@@ -57,7 +57,7 @@ class Obb {
   }
 
   bool contains(Vec2 p) {
-    var sign = 0;
+    var sign = 0.0;
     for (var i = 0; i < 4; i++) {
       final a = corners[i];
       final b = corners[(i + 1) % 4];

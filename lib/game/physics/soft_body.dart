@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'vec2.dart';
 
 /// A particle of a soft body (Verlet integration).

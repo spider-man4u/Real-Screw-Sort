@@ -10,6 +10,7 @@ LevelDef level({
   List<Screw>? screws,
   Map<int, int> slots = const {},
   int? target,
+  int? parMoves,
 }) {
   final ps = plates ??
       [
@@ -32,6 +33,7 @@ LevelDef level({
     screws: ss,
     slots: slots,
     targetPlateId: target,
+    parMoves: parMoves,
   );
 }
 
