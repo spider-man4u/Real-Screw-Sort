@@ -191,15 +191,15 @@ class SoftBody {
       var move = (d - s.rest) * s.stiffness * relaxation;
       move = move.clamp(-maxCorrection, maxCorrection);
       if (pa.isPinned) {
-        pb.pos += dir * move;
+        pb.pos -= dir * move;
       } else if (pb.isPinned) {
-        pa.pos -= dir * move;
+        pa.pos += dir * move;
       } else {
         final wa = 1 / pa.mass;
         final wb = 1 / pb.mass;
         final total = wa + wb;
-        pa.pos -= dir * (move * wa / total);
-        pb.pos += dir * (move * wb / total);
+        pa.pos += dir * (move * wa / total);
+        pb.pos -= dir * (move * wb / total);
       }
     }
   }
