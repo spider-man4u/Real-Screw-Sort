@@ -190,11 +190,19 @@ class BoardPainter extends CustomPainter {
       final body = data.world.bodyById(plate.id);
       if (body == null) continue;
       final p = body.particles;
+      final tl = p[body.topLeft].pos;
+      final tr = p[body.topRight].pos;
+      final br = p[body.bottomRight].pos;
+      final bl = p[body.bottomLeft].pos;
       final path = Path()
-        ..moveTo(p[0].pos.x * data.cell + data.origin.dx, p[0].pos.y * data.cell + data.origin.dy)
-        ..lineTo(p[2].pos.x * data.cell + data.origin.dx, p[2].pos.y * data.cell + data.origin.dy)
-        ..lineTo(p[8].pos.x * data.cell + data.origin.dx, p[8].pos.y * data.cell + data.origin.dy)
-        ..lineTo(p[6].pos.x * data.cell + data.origin.dx, p[6].pos.y * data.cell + data.origin.dy)
+        ..moveTo((tl.x - 0.5) * data.cell + data.origin.dx,
+            (tl.y - 0.5) * data.cell + data.origin.dy)
+        ..lineTo((tr.x + 0.5) * data.cell + data.origin.dx,
+            (tr.y - 0.5) * data.cell + data.origin.dy)
+        ..lineTo((br.x + 0.5) * data.cell + data.origin.dx,
+            (br.y + 0.5) * data.cell + data.origin.dy)
+        ..lineTo((bl.x - 0.5) * data.cell + data.origin.dx,
+            (bl.y + 0.5) * data.cell + data.origin.dy)
         ..close();
 
       final rect = path.getBounds();

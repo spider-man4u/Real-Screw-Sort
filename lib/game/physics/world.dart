@@ -57,8 +57,8 @@ class PhysicsWorld {
     final body = SoftBody(
       _nextId++,
       Vec2(x.toDouble(), y.toDouble()),
-      w.toDouble(),
-      h.toDouble(),
+      w,
+      h,
       gravityScale: gravityScale,
     );
     if (noCollideWith != null) body.noCollide.addAll(noCollideWith);
@@ -146,7 +146,11 @@ class PhysicsWorld {
   void _solveSupportCollisions() {
     final supportEdges = <(int, Vec2, Vec2)>[];
     for (final body in bodies) {
-      supportEdges.add((body.id, body.particles[0].pos, body.particles[2].pos));
+      supportEdges.add((
+        body.id,
+        body.particles[body.topLeft].pos,
+        body.particles[body.topRight].pos,
+      ));
     }
     for (final body in bodies) {
       for (final p in body.particles) {
@@ -174,14 +178,17 @@ class PhysicsWorld {
 
   /// Angle (radians) between the body's top edge and the horizontal.
   double tiltAngle(SoftBody body) {
-    final top = body.particles[2].pos - body.particles[0].pos;
+    final top = body.particles[body.topRight].pos -
+        body.particles[body.topLeft].pos;
     return atan2(top.y, top.x);
   }
 
   /// Vertical sag of the top edge: rest height minus current height.
   double sag(SoftBody body) {
-    final topY = (body.particles[0].pos.y + body.particles[2].pos.y) / 2;
-    return topY - body.origin.y;
+    final topY = (body.particles[body.topLeft].pos.y +
+            body.particles[body.topRight].pos.y) /
+        2;
+    return topY - body.origin.y - 0.5;
   }
 
   void reset() {

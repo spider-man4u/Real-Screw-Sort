@@ -1,6 +1,5 @@
 import 'vec2.dart';
 
-/// A particle of a soft body (Verlet integration).
 class Particle {
   Particle(Vec2 pos)
       : pos = pos,
@@ -65,22 +64,23 @@ class Spring {
   late double rest = -1;
 }
 
-/// Index layout of the 9-particle rectangle:
+/// A soft body for a plate occupying `cols` x `rows` cells.
 ///
-///   0--1--2
-///   |  |  |
+/// Particles sit at the CENTER of each covered cell, so a screw at a cell
+/// center pins a particle exactly - a fully screwed plate stays rigid and
+/// flat, and only unscrewed parts bend and sag. Grid layout:
+///
+///   0--1--2     (3x2 plate: particles at cell centers)
+///   | /| /|
+///   |/ |/ |
 ///   3--4--5
-///   |  |  |
-///   6--7--8
 class SoftBody {
-  SoftBody(this.id, this.origin, this.rectW, this.rectH,
+  SoftBody(this.id, this.origin, this.cols, this.rows,
       {this.gravityScale = 1.0}) {
-    final w = rectW;
-    final h = rectH;
-    particles = List.generate(9, (i) {
-      final px = origin.x + (i % 3) * w / 2;
-      final py = origin.y + (i ~/ 3) * h / 2;
-      return Particle(Vec2(px, py));
+    particles = List.generate(cols * rows, (i) {
+      final col = i % cols;
+      final row = i ~/ cols;
+      return Particle(Vec2(origin.x + col + 0.5, origin.y + row + 0.5));
     });
     void spring(int a, int b, double stiffness) {
       final s = Spring(a, b, stiffness);
@@ -88,31 +88,39 @@ class SoftBody {
       springs.add(s);
     }
 
-    // structure (edges) - stiff: holds the shape
-    spring(0, 1, 0.9); spring(1, 2, 0.9);
-    spring(3, 4, 0.9); spring(4, 5, 0.9);
-    spring(6, 7, 0.9); spring(7, 8, 0.9);
-    spring(0, 3, 0.9); spring(3, 6, 0.9);
-    spring(1, 4, 0.9); spring(4, 7, 0.9);
-    spring(2, 5, 0.9); spring(5, 8, 0.9);
-    // shear (diagonals) - soft: lets the plate flex and bend like cardboard
-    spring(0, 4, 0.18); spring(2, 4, 0.18);
-    spring(6, 4, 0.18); spring(8, 4, 0.18);
-    spring(0, 8, 0.12); spring(2, 6, 0.12);
-
-    for (var i = 0; i < 9; i++) {
-      particles[i].mass = i == 4 ? 1.6 : 1.0;
+    // structure (horizontal + vertical edges) - stiff: holds the shape
+    for (var row = 0; row < rows; row++) {
+      for (var col = 0; col < cols - 1; col++) {
+        spring(row * cols + col, row * cols + col + 1, 0.9);
+      }
+    }
+    for (var col = 0; col < cols; col++) {
+      for (var row = 0; row < rows - 1; row++) {
+        spring(row * cols + col, (row + 1) * cols + col, 0.9);
+      }
+    }
+    // shear (cell diagonals) - soft: lets the plate flex like cardboard
+    for (var row = 0; row < rows - 1; row++) {
+      for (var col = 0; col < cols - 1; col++) {
+        spring(row * cols + col, (row + 1) * cols + col + 1, 0.18);
+        spring(row * cols + col + 1, (row + 1) * cols + col, 0.18);
+      }
     }
   }
 
   final int id;
   final Vec2 origin;
-  final double rectW;
-  final double rectH;
+  final int cols;
+  final int rows;
   final double gravityScale;
 
   late final List<Particle> particles;
   final List<Spring> springs = [];
+
+  int get topLeft => 0;
+  int get topRight => cols - 1;
+  int get bottomLeft => (rows - 1) * cols;
+  int get bottomRight => cols * rows - 1;
 
   /// Bodies this one must not collide with (they overlap in cells).
   final Set<int> noCollide = {};
@@ -124,7 +132,7 @@ class SoftBody {
     for (final p in particles) {
       s += p.pos;
     }
-    return s / 9;
+    return s / particles.length;
   }
 
   Vec2 get velocity {
@@ -134,12 +142,12 @@ class SoftBody {
     return c - prev;
   }
 
-  /// Corners in order: 0, 2, 8, 6 (for OBB).
+  /// Corners in order: topLeft, topRight, bottomRight, bottomLeft (for OBB).
   Obb get obb => Obb([
-        particles[0].pos,
-        particles[2].pos,
-        particles[8].pos,
-        particles[6].pos,
+        particles[topLeft].pos,
+        particles[topRight].pos,
+        particles[bottomRight].pos,
+        particles[bottomLeft].pos,
       ]);
 
   /// The body is released (all screws gone) when no particle is pinned.
@@ -151,7 +159,7 @@ class SoftBody {
   int pinAt(Vec2 anchor) {
     var best = 0;
     var bestD = double.infinity;
-    for (var i = 0; i < 9; i++) {
+    for (var i = 0; i < particles.length; i++) {
       final d = (particles[i].rest - anchor).lengthSq;
       if (d < bestD) {
         bestD = d;
