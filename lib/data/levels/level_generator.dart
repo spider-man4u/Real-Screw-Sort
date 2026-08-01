@@ -111,8 +111,8 @@ class LevelGenerator {
       for (var t = 0; t < 40 && !placed; t++) {
         final w = 2 + _rng.nextInt(2); // 2..3
         final h = 2 + _rng.nextInt(2); // 2..3
-        final x = _rng.nextInt(max(1, cols - w - 1)) + (cols - w > 2 ? 1 : 0);
-        final y = _rng.nextInt(max(1, rows - h - 2)) + 1;
+        final x = _rng.nextInt(cols - w + 1); // 0..cols-w
+        final y = _rng.nextInt(rows - h + 1); // 0..rows-h
         final r = IntRect(x, y, w, h);
         if (rects.any((e) => e.overlaps(r))) continue;
         rects.add(r);
@@ -173,14 +173,16 @@ class LevelGenerator {
     final slots = <int, int>{};
     if (params.colorP > 0 && _rng.nextDouble() < params.colorP && mutable.length >= 4) {
       final count = 1 + _rng.nextInt(2); // 1..2 colors
-      final pick = mutable.toList()..shuffle(_rng);
-      for (var c = 0; c < count; c++) {
-        final s = pick[_rng.nextInt(pick.length)];
-        final idx = mutable.indexOf(s);
-        if (mutable[idx].type == ScrewType.basic) {
-          mutable[idx] = s.copyWith(type: ScrewType.color);
-          slots[s.id % 3] = (slots[s.id % 3] ?? 0) + 1;
-        }
+      final basics = <int>[];
+      for (var i = 0; i < mutable.length; i++) {
+        if (mutable[i].type == ScrewType.basic) basics.add(i);
+      }
+      basics.shuffle(_rng);
+      for (var c = 0; c < count && c < basics.length; c++) {
+        final idx = basics[c];
+        final color = mutable[idx].id % 3;
+        mutable[idx] = mutable[idx].copyWith(type: ScrewType.color, color: color);
+        slots[color] = (slots[color] ?? 0) + 1;
       }
     }
 

@@ -106,13 +106,13 @@ class Screw {
 
   bool get isColor => type == ScrewType.color;
 
-  Screw copyWith({ScrewType? type}) => Screw(
+  Screw copyWith({ScrewType? type, int? color}) => Screw(
         id: id,
         cell: cell,
         plateId: plateId,
         type: type ?? this.type,
         lockKey: lockKey,
-        color: color,
+        color: color ?? this.color,
         depth: depth,
       );
 }
