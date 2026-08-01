@@ -127,7 +127,7 @@ void main() {
       final world = PhysicsWorld(cols: 8, rows: 8);
       final light = world.addBody(x: 1, y: 1, w: 2, h: 1);
       final heavy = world.addBody(x: 4, y: 1, w: 2, h: 1, gravityScale: 1.8);
-      run(world, 60);
+      run(world, 25); // before the light plate has landed
       expect(heavy.center.y, greaterThan(light.center.y));
     });
 

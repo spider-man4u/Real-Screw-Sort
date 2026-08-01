@@ -18,28 +18,33 @@ class Particle {
 
   bool get isPinned => pins.isNotEmpty;
 
+  /// Max position change per substep (cells/s). Caps solver blow-ups.
+  static const double maxSpeed = 2.0;
+
   void integrate(Vec2 gravity, double damping, double dt2) {
     if (isPinned) {
-      pos = pins.last;
-      prev = pos;
+      pos = rest;
+      prev = rest;
       return;
     }
-    final vel = (pos - prev) * damping;
+    var vel = (pos - prev) * damping;
+    final vLen = vel.length;
+    if (vLen > maxSpeed) {
+      vel = vel * (maxSpeed / vLen);
+    }
     prev = pos;
     pos = pos + vel + gravity * dt2;
   }
 
   void solvePin() {
     if (isPinned) {
-      pos = pins.last;
-      prev = pos;
+      pos = rest;
+      prev = rest;
     }
   }
 
   void addPin(Vec2 anchor) {
     pins.add(anchor);
-    pos = anchor;
-    prev = anchor;
   }
 
   void removePin(Vec2 anchor) {
@@ -159,6 +164,11 @@ class SoftBody {
     }
   }
 
+  /// Fraction of the stretch corrected per solver iteration. Lower = more
+  /// stable, higher = stiffer plate. Keeps the PBD iteration from exploding
+  /// on heavily constrained (fully screwed) plates.
+  static const double relaxation = 0.5;
+
   void solveSprings() {
     for (final s in springs) {
       final pa = particles[s.a];
@@ -167,17 +177,17 @@ class SoftBody {
       final diff = pb.pos - pa.pos;
       final d = diff.length;
       if (d < 1e-12) continue;
-      final error = (d - s.rest) / d;
+      final corr = ((d - s.rest) / d) * s.stiffness * relaxation;
       if (pa.isPinned) {
-        pb.pos += diff * (error * s.stiffness);
+        pb.pos += diff * corr;
       } else if (pb.isPinned) {
-        pa.pos -= diff * (error * s.stiffness);
+        pa.pos -= diff * corr;
       } else {
         final wa = 1 / pa.mass;
         final wb = 1 / pb.mass;
         final total = wa + wb;
-        pa.pos -= diff * (error * s.stiffness * wa / total);
-        pb.pos += diff * (error * s.stiffness * wb / total);
+        pa.pos -= diff * (corr * wa / total);
+        pb.pos += diff * (corr * wb / total);
       }
     }
   }
