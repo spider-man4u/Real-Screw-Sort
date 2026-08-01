@@ -63,18 +63,17 @@ if (keystorePropertiesFile.exists()) {
 
 
 def patch_kotlin(path: str, content: str) -> str:
-    # Ensure the imports the loader needs are present.
+    # Ensure the imports the loader needs are present. Prepending is always
+    # valid: a generated build.gradle.kts has no package declaration.
+    missing = []
     for imp, default in (
         ("java.util.Properties", "import java.util.Properties"),
         ("java.io.FileInputStream", "import java.io.FileInputStream"),
     ):
         if imp not in content and default not in content:
-            content = re.sub(
-                r"(?m)^import ",
-                default + "\nimport ",
-                content,
-                count=1,
-            )
+            missing.append(default)
+    if missing:
+        content = "\n".join(missing) + "\n" + content
 
     keystore_loader = """
 val keystoreProperties = Properties()
