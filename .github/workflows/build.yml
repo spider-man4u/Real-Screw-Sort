@@ -26,6 +26,12 @@ jobs:
         run: dart fix --apply || true
       - run: flutter analyze --no-fatal-infos
       - run: flutter test
+      - name: Upload physics debug output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-debug-output
+          path: build/nan_debug.txt
 
   android:
     name: Build Android
