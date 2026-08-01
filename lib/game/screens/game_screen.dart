@@ -33,41 +33,78 @@ class _GameScreenState extends State<GameScreen>
   String _themeKey = 'workshop';
   final String _skinKey = 'classic';
 
+  bool _initialized = false;
+  bool _loading = true;
+  bool _ctrlLoaded = false;
+  String? _loadError;
+  int _levelId = 1;
+
   @override
   void initState() {
     super.initState();
     _ticker = createTicker(_onTick);
   }
 
-  bool _initialized = false;
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_initialized) return;
     _initialized = true;
-    final levelId = ModalRoute.of(context)!.settings.arguments as int? ?? 1;
-    final catalog = context.read<LevelCatalog>();
-    final progress = context.read<ProgressStore>();
-    final level = catalog.level(levelId);
-    _themeKey = level.theme;
-    _ctrl = GameController(
-      level: level,
-      progress: progress,
-      audio: context.read<AudioManager>(),
-      analytics: context.read<AnalyticsService>(),
-      themeKey: _themeKey,
-      skinKey: _skinKey,
-    )..init();
-    _ctrl.addListener(_onCtrl);
-    _ticker!.start();
+    _levelId = ModalRoute.of(context)!.settings.arguments as int? ?? 1;
+    _loading = true;
+    _loadLevel(_levelId);
+  }
+
+  /// Loads the level off the build phase: generated levels run the solver,
+  /// which can take a moment and can fail (unsolvable layout, out of range).
+  /// A failure here used to leave a blank/grey screen in release builds.
+  Future<void> _loadLevel(int levelId) async {
+    try {
+      final catalog = context.read<LevelCatalog>();
+      final progress = context.read<ProgressStore>();
+      final audio = context.read<AudioManager>();
+      final analytics = context.read<AnalyticsService>();
+      final level =
+          await Future<void>.delayed(Duration.zero).then((_) => catalog.level(levelId));
+      if (!mounted) return;
+      _themeKey = level.theme;
+      _ctrl = GameController(
+        level: level,
+        progress: progress,
+        audio: audio,
+        analytics: analytics,
+        themeKey: _themeKey,
+        skinKey: _skinKey,
+      )..init();
+      _ctrl.addListener(_onCtrl);
+      _ctrlLoaded = true;
+      _ticker!.start();
+      setState(() => _loading = false);
+    } catch (e, st) {
+      debugPrint('Failed to load level $levelId: $e\n$st');
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _loadError = '$e';
+      });
+    }
+  }
+
+  void _retry() {
+    setState(() {
+      _loading = true;
+      _loadError = null;
+    });
+    _loadLevel(_levelId);
   }
 
   @override
   void dispose() {
-    _ctrl.removeListener(_onCtrl);
+    if (_ctrlLoaded) {
+      _ctrl.removeListener(_onCtrl);
+      _ctrl.dispose();
+    }
     _ticker?.dispose();
-    _ctrl.dispose();
     super.dispose();
   }
 
@@ -160,6 +197,8 @@ class _GameScreenState extends State<GameScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (_loadError != null) return _errorView(context);
+    if (_loading) return _loadingView(context);
     final progress = context.watch<ProgressStore>();
     final level = _ctrl.level;
     final phase = _ctrl.phase;
@@ -233,7 +272,104 @@ class _GameScreenState extends State<GameScreen>
   void _next() {
     final id = _ctrl.level.id;
     _maybeInterstitial();
-    Navigator.of(context).pushReplacementNamed('/game', arguments: id + 1);
+    final next = id + 1;
+    final total = context.read<LevelCatalog>().totalLevels;
+    if (next > total) {
+      Navigator.of(context).pushNamedAndRemoveUntil('/', (r) => false);
+    } else {
+      Navigator.of(context).pushReplacementNamed('/game', arguments: next);
+    }
+  }
+
+  Widget _loadingView(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(gradient: Palette.screenBackdrop),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(
+                width: 40,
+                height: 40,
+                child: CircularProgressIndicator(strokeWidth: 4),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Loading Level $_levelId...',
+                style: const TextStyle(
+                  fontFamily: 'Baloo2',
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: Palette.ink,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _errorView(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(gradient: Palette.screenBackdrop),
+        child: SafeArea(
+          child: Center(
+            child: SoftCard(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error_outline_rounded,
+                      size: 56, color: Palette.orange),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Unable to load level',
+                    style: TextStyle(
+                      fontFamily: 'Baloo2',
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: Palette.ink,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    _loadError ?? '',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontFamily: 'Baloo2',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Palette.inkSoft,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  GameButton(
+                    label: 'Retry',
+                    icon: Icons.refresh_rounded,
+                    height: 48,
+                    fontSize: 16,
+                    onPressed: _retry,
+                  ),
+                  const SizedBox(height: 10),
+                  GameButton(
+                    label: 'Home',
+                    icon: Icons.home_rounded,
+                    gradient: Palette.violetGradient,
+                    height: 48,
+                    fontSize: 16,
+                    onPressed: () =>
+                        Navigator.of(context).popUntil((r) => r.isFirst),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _maybeInterstitial() async {

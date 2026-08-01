@@ -62,9 +62,11 @@ const List<IapProduct> iapProducts = [
   ),
 ];
 
-/// Abstract store interface; mock implementation grants instantly.
+/// Abstract store interface. The shop only grants items when [purchase]
+/// succeeds (real billing integration required for that).
 abstract class IapService {
-  /// Purchases a product. Returns true on success.
+  /// Purchases a product. Returns true only after the purchase was
+  /// completed and verified by the store. Never auto-grants.
   Future<bool> purchase(IapProduct product);
 
   bool isPurchased(String productId);
@@ -72,7 +74,10 @@ abstract class IapService {
   void dispose();
 }
 
-/// In-app demo store: everything is granted immediately with a fancy dialog.
+/// Placeholder store used while no store billing integration is wired.
+/// It never grants anything: tapping a pack in the shop opens no billing
+/// flow and rewards no coins. Simulated purchases live in the developer
+/// menu instead of the production purchase path.
 class MockIapService implements IapService {
   MockIapService(this._onPurchased);
 
@@ -85,16 +90,8 @@ class MockIapService implements IapService {
 
   @override
   Future<bool> purchase(IapProduct product) async {
-    await Future<void>.delayed(const Duration(milliseconds: 500));
-    if (product.id == 'remove_ads') {
-      _owned.add('remove_ads');
-      _onPurchased(product);
-      return true;
-    }
-    _owned.add(product.id);
-    _owned.add('anything');
-    _onPurchased(product);
-    return true;
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    return false;
   }
 
   @override

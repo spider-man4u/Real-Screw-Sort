@@ -54,6 +54,8 @@ class _ShopScreenState extends State<ShopScreen> {
       progress.checkAchievements();
       context.read<AnalyticsService>().logEvent('iap_${product.id}');
       showToast(context, '${product.name} purchased!');
+    } else if (mounted) {
+      showToast(context, 'Purchases are not available in this build yet');
     }
     if (mounted) setState(() => _busy = false);
   }
