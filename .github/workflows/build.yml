@@ -27,7 +27,7 @@ jobs:
       - name: Analyze (capture output)
         run: mkdir -p build && (flutter analyze --no-fatal-infos || true) 2>&1 | tee build/analyze.txt
       - name: Test (capture output)
-        run: (flutter test; test \$? -eq 0) 2>&1 | tee build/test_output.txt; exit \${PIPESTATUS[0]}
+        run: (flutter test; test $? -eq 0) 2>&1 | tee build/test_output.txt; exit ${PIPESTATUS[0]}
       - name: Upload physics debug output
         if: always()
         uses: actions/upload-artifact@v4
