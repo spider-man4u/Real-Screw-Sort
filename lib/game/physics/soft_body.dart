@@ -164,10 +164,11 @@ class SoftBody {
     }
   }
 
-  /// Fraction of the stretch corrected per solver iteration. Lower = more
-  /// stable, higher = stiffer plate. Keeps the PBD iteration from exploding
-  /// on heavily constrained (fully screwed) plates.
-  static const double relaxation = 0.5;
+  /// Fraction of the stretch corrected per solver iteration. Keeps the
+  /// effective per-substep stiffness (stiffness x relaxation x iterations)
+  /// below the verlet stability limit (~4), so pinned plates cannot resonate
+  /// and blow up.
+  static const double relaxation = 0.25;
 
   void solveSprings() {
     for (final s in springs) {
