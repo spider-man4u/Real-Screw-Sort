@@ -13,11 +13,7 @@ class LevelCatalog {
 
   final Map<int, LevelDef> _cache = {};
 
-  static GenParams paramsFor(int id) {
-    if (id <= 50) return difficultyBands[0];
-    if (id <= 150) return difficultyBands[1];
-    return difficultyBands[2];
-  }
+  static GenParams paramsFor(int id) => paramsForLevel(id);
 
   LevelDef level(int id) {
     if (id < 1 || id > totalLevels) {

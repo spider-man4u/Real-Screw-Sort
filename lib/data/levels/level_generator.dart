@@ -57,6 +57,40 @@ const List<GenParams> difficultyBands = [
   ),
 ];
 
+/// Continuous difficulty curve for generated levels: every parameter grows
+/// smoothly with the level id, so later levels are strictly more demanding
+/// than earlier ones instead of jumping between flat random bands.
+///
+/// [id] must be greater than the handcrafted count ([LevelCatalog.handcraftedCount]).
+GenParams paramsForLevel(int id) {
+  assert(id > 30, 'generated levels start at 31');
+  final t = (id - 31) / 169; // 0..1 across the 31..200 range
+
+  final cols = t < 0.45 ? 6 : 7;
+  final rows = t < 0.25 ? 6 : (t < 0.75 ? 8 : 9);
+
+  // Boards grow before screw counts plateau: keep headroom for placement.
+  final plateCount = 2 + (t * 3.2).floor().clamp(0, 3); // 2..5
+  final screwMin = 5 + (t * 12).round(); // 5..17
+  final screwMax = screwMin + 1 + (t * 3).round(); // 6..21
+
+  return GenParams(
+    cols: cols,
+    rows: rows,
+    plateMin: plateCount,
+    plateMax: plateCount,
+    screwMin: screwMin,
+    screwMax: screwMax,
+    lockedP: 0.15 + t * 0.25,
+    frozenP: t < 0.18 ? 0 : (t - 0.18) * 0.5,
+    colorP: t * 0.35,
+    hiddenP: t < 0.1 ? 0 : (t - 0.1) * 0.3,
+    heavyP: t < 0.45 ? 0 : (t - 0.45) * 0.55,
+    oneWayP: t < 0.3 ? 0 : (t - 0.3) * 0.35,
+    theme: 'workshop',
+  );
+}
+
 /// Builds solver-validated levels. Every generated level is guaranteed
 /// solvable and every screw sits inside its own plate's rect.
 class LevelGenerator {
@@ -134,18 +168,21 @@ class LevelGenerator {
       screws.add(Screw(id: screws.length, cell: candidates.first, plateId: pl.id));
       target++;
     }
-    // then spread the rest
-    while (target < screwCount) {
+    // then spread the rest (bounded: a saturated plate must not loop forever)
+    var idle = 0;
+    while (target < screwCount && idle < screwCount * 4) {
       final pl = plates[_rng.nextInt(plates.length)];
       final candidates = _edgeCells(pl.rect);
       candidates.shuffle(_rng);
+      var placed = false;
       for (final c in candidates) {
         if (screws.any((s) => s.cell == c)) continue;
         screws.add(Screw(id: screws.length, cell: c, plateId: pl.id));
         target++;
+        placed = true;
         break;
       }
-      if (target >= screwCount) break;
+      idle = placed ? 0 : idle + 1;
     }
     if (screws.length < 2) return null;
     screwCount = screws.length;
